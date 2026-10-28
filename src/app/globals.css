@@ -1,0 +1,101 @@
+@import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;1,6..72,400;1,6..72,600&family=Space+Mono:ital,wght@0,400;0,700;1,400&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #080808;
+  --foreground: #f4f1ea;
+  --clicks-red: #B3141B;
+  --clicks-scarlet: #f70012;
+}
+
+html {
+  background-color: #080808;
+  color: #f4f1ea;
+  scroll-behavior: auto;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: #080808;
+  color: #f4f1ea;
+  overflow-x: hidden;
+  position: relative;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+::selection {
+  background-color: #B3141B;
+  color: #ffffff;
+}
+
+/* Custom minimal scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #080808;
+}
+::-webkit-scrollbar-thumb {
+  background: #262626;
+  border-radius: 0px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #B3141B;
+}
+
+/* Analog Film Grain Texture Overlay */
+.film-grain-bg {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.04) 1px, transparent 0);
+  background-size: 24px 24px;
+}
+
+/* Contact Sheet Sprocket Border */
+.sprocket-border-top {
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 14px,
+    #141414 14px,
+    #141414 26px
+  );
+}
+
+/* Optical Crosshair / Focus Reticle */
+.focus-bracket {
+  position: relative;
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Editorial Stagger / Line Clamp */
+.editorial-text {
+  font-family: 'Newsreader', Georgia, serif;
+}
+
+.display-title {
+  font-family: 'Bebas Neue', Oswald, Impact, sans-serif;
+  letter-spacing: 0.02em;
+}
+
+.mono-meta {
+  font-family: 'Space Mono', 'JetBrains Mono', monospace;
+}
+
+/* Reduced Motion Fallbacks */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
