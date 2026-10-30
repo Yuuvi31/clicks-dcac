@@ -818,21 +818,27 @@ export function getRosterAsApplicants(): Applicant[] {
     id: m.id,
     applicationNo: `CLK-MEM-${String(idx + 1).padStart(3, '0')}`,
     fullName: m.name,
-    email: m.email || `${m.name.toLowerCase().replace(/[^a-z0-9]/g, '')}@dcac.du.ac.in`,
-    phone: m.phone || 'N/A',
+    email: m.email || '',
+    phone: m.phone || '',
     gender: m.gender || 'Prefer not to say',
-    courseYear: `${m.course} • ${m.year} Year`,
+    courseYear: m.year !== 'Core'
+      ? `${m.course} • ${m.year} Year`
+      : `${m.course} • Core Team`,
     rollNo: m.rollNo,
-    cameraGear: m.cameraGear || 'DSLR / Mirrorless / Smartphone',
+    // Only populate gear if explicitly known — do NOT fill defaults
+    cameraGear: m.cameraGear || '',
     gearCategory: m.gearCategory || 'DSLR / Mirrorless',
-    primaryGenre: m.primaryGenre || 'Street & Documentary',
+    // Only populate genre if explicitly known
+    primaryGenre: m.primaryGenre || '',
     portfolioUrl: '',
-    statement: `Enrolled Society ${m.role} • Delhi College of Arts & Commerce`,
+    statement: `${m.role} • Delhi College of Arts & Commerce`,
     status: m.status === 'COUNCIL' ? 'SELECTED' : 'SELECTED',
-    rating: m.status === 'COUNCIL' ? 5 : 4,
-    internalNotes: `Active Society Record: ${m.role} (${m.year} Year)`,
+    rating: m.status === 'COUNCIL' ? 5 : undefined,
+    internalNotes: `${m.role}`,
     reviewedBy: 'Artika Jain (President)',
     createdAt: new Date(Date.now() - (73 - idx) * 3600000 * 24).toISOString(),
     updatedAt: new Date().toISOString(),
+    // Extra metadata for portal view
+    councilRole: m.status === 'COUNCIL' ? m.role : undefined,
   }));
 }

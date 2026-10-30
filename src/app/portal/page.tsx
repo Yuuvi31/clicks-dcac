@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { Applicant, CouncilRole, ApplicationStatus, ROLE_PERMISSIONS } from '@/types/backend';
 import { playMechanicalClick, playShutterSnap } from '@/lib/sound';
+import { COMPETITION_HISTORY, UPCOMING_COMPETITIONS } from '@/data/competitions-data';
 
 interface CurrentUser {
   userId: string;
@@ -33,6 +34,7 @@ interface CurrentUser {
 
 interface DashboardStats {
   total: number;
+  council: number;
   activeMembers: number;
   newRecruits: number;
   pending: number;
@@ -66,11 +68,16 @@ export default function CouncilPortal() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loadingData, setLoadingData] = useState(false);
 
-  // Filter & Search
+  // Portal section: 'students' | 'competitions'
+  const [portalSection, setPortalSection] = useState<'students' | 'competitions'>('students');
+
+  // Competition tab: 'history' | 'upcoming'
+  const [compTab, setCompTab] = useState<'history' | 'upcoming'>('history');
+
+  // Filter & Search — COUNCIL tab added
   const [searchQuery, setSearchQuery] = useState('');
-  const [rosterTab, setRosterTab] = useState<'ALL' | 'MEMBERS' | 'RECRUITS' | '1st' | '2nd' | '3rd'>('ALL');
+  const [rosterTab, setRosterTab] = useState<'ALL' | 'COUNCIL' | 'MEMBERS' | 'RECRUITS' | '1st' | '2nd' | '3rd'>('ALL');
   const [statusFilter, setStatusFilter] = useState<string>('ALL');
-  const [gearFilter, setGearFilter] = useState<string>('ALL');
 
   // Selected dossier for modal
   const [selectedApplicant, setSelectedApplicant] = useState<Applicant | null>(null);
@@ -107,7 +114,6 @@ export default function CouncilPortal() {
       if (searchQuery) params.set('search', searchQuery);
       if (rosterTab !== 'ALL') params.set('roster', rosterTab);
       if (statusFilter !== 'ALL') params.set('status', statusFilter);
-      if (gearFilter !== 'ALL') params.set('gear', gearFilter);
 
       const res = await fetch(`/api/portal/applicants?${params.toString()}`);
       const data = await res.json();
@@ -120,7 +126,7 @@ export default function CouncilPortal() {
     } finally {
       setLoadingData(false);
     }
-  }, [currentUser, searchQuery, rosterTab, statusFilter, gearFilter]);
+  }, [currentUser, searchQuery, rosterTab, statusFilter]);
 
   useEffect(() => {
     checkSession();
@@ -467,7 +473,27 @@ export default function CouncilPortal() {
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 space-y-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-24 space-y-6">
+
+        {/* ── PORTAL SECTION SWITCHER ──────────────────────────── */}
+        <div className="flex items-center space-x-1 border border-[#222] bg-[#0a0a0a] p-1 font-mono text-xs w-fit">
+          <button
+            onClick={() => { playMechanicalClick(); setPortalSection('students'); }}
+            className={`px-4 py-2 uppercase tracking-widest text-[11px] font-bold transition-all ${portalSection === 'students' ? 'bg-[#B3141B] text-white' : 'text-[#777] hover:text-white'}`}
+          >
+            Student Database
+          </button>
+          <button
+            onClick={() => { playMechanicalClick(); setPortalSection('competitions'); }}
+            className={`px-4 py-2 uppercase tracking-widest text-[11px] font-bold transition-all ${portalSection === 'competitions' ? 'bg-[#B3141B] text-white' : 'text-[#777] hover:text-white'}`}
+          >
+            Competition Tracker
+          </button>
+        </div>
+
+        {/* ── STUDENT DATABASE SECTION ─────────────────────────── */}
+        {portalSection === 'students' && (<>
+
         {/* Overview Stats Bar */}
         {stats && (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -476,53 +502,49 @@ export default function CouncilPortal() {
               <span className="font-display text-3xl text-white mt-1 block">{stats.total}</span>
             </div>
             <div className="p-4 bg-[#0e0e0e] border border-[#222]">
-              <span className="font-mono text-[9px] text-emerald-400 uppercase tracking-wider block">Enrolled Roster</span>
+              <span className="font-mono text-[9px] text-[#B3141B] uppercase tracking-wider block">Core Council</span>
+              <span className="font-display text-3xl text-[#ff545b] mt-1 block">{stats.council ?? 5}</span>
+            </div>
+            <div className="p-4 bg-[#0e0e0e] border border-[#222]">
+              <span className="font-mono text-[9px] text-emerald-400 uppercase tracking-wider block">Enrolled Members</span>
               <span className="font-display text-3xl text-emerald-400 mt-1 block">{stats.activeMembers}</span>
             </div>
             <div className="p-4 bg-[#0e0e0e] border border-[#222]">
-              <span className="font-mono text-[9px] text-[#B3141B] uppercase tracking-wider block">Web Recruits</span>
-              <span className="font-display text-3xl text-[#ff545b] mt-1 block">{stats.newRecruits}</span>
+              <span className="font-mono text-[9px] text-yellow-400 uppercase tracking-wider block">Web Recruits</span>
+              <span className="font-display text-3xl text-yellow-400 mt-1 block">{stats.newRecruits}</span>
             </div>
             <div className="p-4 bg-[#0e0e0e] border border-[#222]">
-              <span className="font-mono text-[9px] text-yellow-500 uppercase tracking-wider block">Pending Review</span>
-              <span className="font-display text-3xl text-yellow-400 mt-1 block">{stats.pending}</span>
-            </div>
-            <div className="p-4 bg-[#0e0e0e] border border-[#222]">
-              <span className="font-mono text-[9px] text-[#888] uppercase tracking-wider block">Year Breakdown</span>
-              <div className="font-mono text-xs text-[#aaa] mt-1 space-x-1.5 truncate">
-                <span>1st: {stats.year1}</span>
-                <span>• 2nd: {stats.year2}</span>
-                <span>• 3rd: {stats.year3}</span>
+              <span className="font-mono text-[9px] text-[#888] uppercase tracking-wider block">Gender (M/F)</span>
+              <div className="font-mono text-sm text-[#ccc] mt-1">
+                <span>{stats.male}M</span><span className="text-[#444] mx-1">/</span><span>{stats.female}F</span>
               </div>
             </div>
             <div className="p-4 bg-[#0e0e0e] border border-[#222]">
-              <span className="font-mono text-[9px] text-[#888] uppercase tracking-wider block">Gear Breakdown</span>
-              <div className="font-mono text-[10px] text-[#aaa] mt-1 truncate">
-                DSLR: {stats.dslrCount} • Film: {stats.filmCount}
+              <span className="font-mono text-[9px] text-[#888] uppercase tracking-wider block">Year Spread</span>
+              <div className="font-mono text-[10px] text-[#aaa] mt-1 space-y-0.5">
+                <div>1st: {stats.year1} &nbsp; 2nd: {stats.year2} &nbsp; 3rd: {stats.year3}</div>
               </div>
             </div>
           </div>
         )}
 
-        {/* Cohort & Membership Segmented Filter Tabs */}
-        <div className="flex items-center space-x-1 overflow-x-auto pb-1 bg-[#0c0c0c] border border-[#1f1f1f] p-1 font-mono text-xs">
+        {/* Cohort tabs — includes COUNCIL */}
+        <div className="flex items-center space-x-0.5 overflow-x-auto pb-1 bg-[#0c0c0c] border border-[#1f1f1f] p-1 font-mono text-xs">
           {[
-            { id: 'ALL', label: `ALL STUDENTS (${stats?.total || 0})` },
-            { id: 'MEMBERS', label: `ENROLLED MEMBERS (${stats?.activeMembers || 0})` },
-            { id: 'RECRUITS', label: `NEW RECRUITS (${stats?.newRecruits || 0})` },
+            { id: 'ALL', label: `ALL (${stats?.total || 0})` },
+            { id: 'COUNCIL', label: `CORE COUNCIL (${stats?.council ?? 5})` },
+            { id: 'MEMBERS', label: `MEMBERS (${stats?.activeMembers || 0})` },
+            { id: 'RECRUITS', label: `WEB RECRUITS (${stats?.newRecruits || 0})` },
             { id: '1st', label: `1ST YEAR (${stats?.year1 || 0})` },
             { id: '2nd', label: `2ND YEAR (${stats?.year2 || 0})` },
             { id: '3rd', label: `3RD YEAR (${stats?.year3 || 0})` },
           ].map((tab) => (
             <button
               key={tab.id}
-              onClick={() => {
-                playMechanicalClick();
-                setRosterTab(tab.id as typeof rosterTab);
-              }}
-              className={`px-3 py-2 uppercase tracking-wider text-[11px] font-bold transition-all shrink-0 ${
+              onClick={() => { playMechanicalClick(); setRosterTab(tab.id as typeof rosterTab); }}
+              className={`px-3 py-2 uppercase tracking-wider text-[10px] font-bold transition-all shrink-0 ${
                 rosterTab === tab.id
-                  ? 'bg-[#B3141B] text-white shadow-md'
+                  ? 'bg-[#B3141B] text-white'
                   : 'text-[#888] hover:text-white hover:bg-[#161616]'
               }`}
             >
@@ -531,30 +553,25 @@ export default function CouncilPortal() {
           ))}
         </div>
 
-        {/* Action Controls & Excel Export Bar */}
-        <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-4 bg-[#0c0c0c] border border-[#202020] p-4">
-          {/* Search Box */}
+        {/* Search + Status + Export Bar */}
+        <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center gap-3 bg-[#0c0c0c] border border-[#202020] p-4">
           <div className="relative flex-1">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#555]" />
             <input
               type="text"
-              placeholder="Search candidate by name, roll no, course, email, phone, or camera gear..."
+              placeholder="Search by name, roll no, course, email or phone..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-[#141414] border border-[#262626] focus:border-[#B3141B] pl-9 pr-4 py-2 font-mono text-xs text-white focus:outline-none transition-colors"
             />
           </div>
 
-          {/* Filter Status */}
-          <div className="flex items-center space-x-1.5 overflow-x-auto pb-1 md:pb-0 scrollbar-none font-mono text-[10px]">
+          <div className="flex items-center space-x-1.5 overflow-x-auto scrollbar-none font-mono text-[10px]">
             <span className="text-[#555] uppercase tracking-wider shrink-0">STATUS:</span>
             {['ALL', 'PENDING', 'SHORTLISTED', 'SELECTED', 'REJECTED'].map((st) => (
               <button
                 key={st}
-                onClick={() => {
-                  playMechanicalClick();
-                  setStatusFilter(st);
-                }}
+                onClick={() => { playMechanicalClick(); setStatusFilter(st); }}
                 className={`px-2.5 py-1.5 uppercase transition-colors shrink-0 border ${
                   statusFilter === st
                     ? 'bg-[#B3141B] text-white border-[#B3141B] font-bold'
@@ -566,145 +583,122 @@ export default function CouncilPortal() {
             ))}
           </div>
 
-          {/* Gear Filter Dropdown */}
-          <div className="flex items-center space-x-1.5 font-mono text-[10px]">
-            <span className="text-[#555] uppercase tracking-wider shrink-0">GEAR:</span>
-            <select
-              value={gearFilter}
-              onChange={(e) => {
-                playMechanicalClick();
-                setGearFilter(e.target.value);
-              }}
-              className="bg-[#141414] border border-[#222] text-[#aaa] px-2 py-1.5 focus:outline-none focus:border-[#B3141B]"
-            >
-              <option value="ALL">ALL GEAR</option>
-              <option value="DSLR / Mirrorless">DSLR / Mirrorless</option>
-              <option value="35mm Analog Film">35mm Film</option>
-              <option value="Smartphone (Manual/Pro)">Smartphone</option>
-              <option value="No Gear (Eager to Learn)">No Gear</option>
-            </select>
-          </div>
-
-          {/* Export to Excel Action */}
           {currentUser.permissions.canExportExcel ? (
             <button
               onClick={handleExportExcel}
               disabled={isExporting}
               className="flex items-center justify-center space-x-2 px-4 py-2 bg-[#1b4332] hover:bg-[#2d6a4f] text-emerald-200 border border-emerald-500/40 font-mono text-xs uppercase tracking-wider font-bold transition-all disabled:opacity-50 shrink-0"
-              title="Download formatted Excel (.xlsx) file"
             >
               <FileSpreadsheet size={15} />
-              <span>{isExporting ? 'GENERATING XLSX...' : 'EXPORT EXCEL'}</span>
+              <span>{isExporting ? 'GENERATING...' : 'EXPORT EXCEL'}</span>
             </button>
           ) : (
             <div className="font-mono text-[10px] text-[#555] px-3 py-1.5 border border-[#1e1e1e] flex items-center space-x-1 shrink-0">
               <Lock size={11} />
-              <span>EXCEL EXPORT (PRESIDENT/VP ONLY)</span>
+              <span>EXCEL: PRESIDENT/VP ONLY</span>
             </div>
           )}
         </div>
 
-        {/* Applicant Dossier Table */}
+        {/* Student Table */}
         <div className="bg-[#0c0c0c] border border-[#202020] overflow-hidden">
           <div className="p-4 border-b border-[#1c1c1c] flex flex-wrap justify-between items-center gap-2 font-mono text-xs text-[#777]">
             <div className="flex items-center space-x-2">
               <span className="w-2 h-2 bg-[#B3141B]" />
               <span className="text-white font-bold uppercase tracking-wider">
-                {rosterTab === 'ALL'
-                  ? 'FULL RECRUITMENT & ENROLLED ROSTER'
-                  : rosterTab === 'MEMBERS'
-                  ? 'OFFICIAL ENROLLED SOCIETY MEMBERS'
-                  : rosterTab === 'RECRUITS'
-                  ? 'NEW ONLINE APPLICANTS'
-                  : `${rosterTab.toUpperCase()} YEAR STUDENTS`}
+                {rosterTab === 'ALL' ? 'ALL STUDENTS & ROSTER'
+                  : rosterTab === 'COUNCIL' ? 'CORE COUNCIL MEMBERS'
+                  : rosterTab === 'MEMBERS' ? 'ENROLLED SOCIETY MEMBERS'
+                  : rosterTab === 'RECRUITS' ? 'WEB APPLICANTS'
+                  : `${rosterTab.toUpperCase()} YEAR`}
               </span>
               <span className="text-[#555]">({applicants.length} records)</span>
             </div>
-            <span className="text-[10px] text-[#555]">
-              CLICK ANY ROW TO INSPECT DOSSIER, RECORD RATINGS, OR EDIT NOTES
-            </span>
+            <span className="text-[10px] text-[#555]">CLICK ROW TO OPEN DOSSIER</span>
           </div>
 
           {loadingData ? (
-            <div className="py-20 text-center font-mono text-xs text-[#666]">
-              LOADING CANDIDATE RECORDS...
-            </div>
+            <div className="py-20 text-center font-mono text-xs text-[#666]">LOADING...</div>
           ) : applicants.length === 0 ? (
             <div className="py-20 text-center font-mono text-xs text-[#666] space-y-2">
               <Camera size={24} className="mx-auto text-[#444]" />
-              <p>No matching candidate dossiers found for this filter.</p>
+              <p>No records match this filter.</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left font-mono text-xs">
                 <thead>
                   <tr className="border-b border-[#1c1c1c] text-[#666] text-[10px] uppercase tracking-wider bg-[#0e0e0e]">
-                    <th className="py-3 px-4">Dossier / ID</th>
-                    <th className="py-3 px-4">Student Name</th>
+                    <th className="py-3 px-4">Type / ID</th>
+                    <th className="py-3 px-4">Name</th>
                     <th className="py-3 px-4">Course &amp; Roll No</th>
-                    <th className="py-3 px-4">Camera Equipment</th>
-                    <th className="py-3 px-4">Genre</th>
-                    <th className="py-3 px-4">WhatsApp Contact</th>
+                    <th className="py-3 px-4">WhatsApp</th>
+                    <th className="py-3 px-4">Email</th>
                     <th className="py-3 px-4">Rating</th>
                     <th className="py-3 px-4">Status</th>
-                    <th className="py-3 px-4 text-right">Inspect</th>
+                    <th className="py-3 px-4 text-right">Open</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-[#181818]">
                   {applicants.map((app) => {
                     const badge = statusBadges[app.status];
-                    const isOfficialMember = app.applicationNo.startsWith('CLK-MEM-');
-                    const rawPhone = app.phone.replace(/[^0-9]/g, '');
+                    const isCouncil = ['clk-001','clk-002','clk-003','clk-004','clk-005','clk-006'].includes(app.id);
+                    const isMember = app.applicationNo.startsWith('CLK-MEM-') && !isCouncil;
+                    const rawPhone = app.phone ? app.phone.replace(/[^0-9]/g, '') : '';
                     const waNum = rawPhone.length === 10 ? `91${rawPhone}` : rawPhone;
 
                     return (
                       <tr
                         key={app.id}
                         onClick={() => openDossier(app)}
-                        className="hover:bg-[#121212] cursor-pointer transition-colors group"
+                        className={`cursor-pointer transition-colors group ${isCouncil ? 'bg-[#0f0a0a] hover:bg-[#160b0b]' : 'hover:bg-[#121212]'}`}
                       >
                         <td className="py-3.5 px-4 font-bold">
-                          <span className={isOfficialMember ? 'text-emerald-400' : 'text-[#f70012]'}>
-                            {app.applicationNo}
-                          </span>
-                          <span className="block text-[8px] text-[#555] uppercase mt-0.5">
-                            {isOfficialMember ? 'SOCIETY ROSTER' : 'WEB APPLICANT'}
-                          </span>
+                          {isCouncil ? (
+                            <>
+                              <span className="text-[#B3141B]">COUNCIL</span>
+                              <span className="block text-[8px] text-[#B3141B]/60 uppercase mt-0.5">{app.internalNotes}</span>
+                            </>
+                          ) : isMember ? (
+                            <>
+                              <span className="text-emerald-400">{app.applicationNo}</span>
+                              <span className="block text-[8px] text-[#555] uppercase mt-0.5">MEMBER</span>
+                            </>
+                          ) : (
+                            <>
+                              <span className="text-[#f70012]">{app.applicationNo}</span>
+                              <span className="block text-[8px] text-[#555] uppercase mt-0.5">APPLICANT</span>
+                            </>
+                          )}
                         </td>
                         <td className="py-3.5 px-4">
-                          <div className="font-bold text-white group-hover:text-[#B3141B] transition-colors">
+                          <div className={`font-bold transition-colors ${isCouncil ? 'text-[#ff9090] group-hover:text-white' : 'text-white group-hover:text-[#B3141B]'}`}>
                             {app.fullName}
                           </div>
-                          <div className="text-[10px] text-[#666]">{app.email}</div>
+                          <div className="text-[10px] text-[#555]">{app.gender}</div>
                         </td>
                         <td className="py-3.5 px-4">
                           <div className="text-[#ccc]">{app.courseYear}</div>
                           {app.rollNo && (
-                            <span className="inline-block mt-0.5 px-1.5 py-0.2 bg-[#1a1a1a] text-[#888] border border-[#2a2a2a] text-[9px]">
-                              Roll #{app.rollNo}
+                            <span className="inline-block mt-0.5 px-1.5 bg-[#1a1a1a] text-[#888] border border-[#2a2a2a] text-[9px]">
+                              #{app.rollNo}
                             </span>
                           )}
                         </td>
-                        <td className="py-3.5 px-4">
-                          <span className="text-white block truncate max-w-[180px]">{app.cameraGear}</span>
-                          <span className="text-[9px] text-[#555] block">{app.gearCategory}</span>
-                        </td>
-                        <td className="py-3.5 px-4 text-[#aaa]">{app.primaryGenre}</td>
                         <td className="py-3.5 px-4" onClick={(e) => e.stopPropagation()}>
-                          {rawPhone && rawPhone !== 'N/A' ? (
+                          {rawPhone ? (
                             <a
                               href={`https://wa.me/${waNum}?text=${encodeURIComponent(`Hello ${app.fullName}, this is regarding CLICKS Photography Society, DCAC.`)}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center space-x-1 text-emerald-400 hover:text-emerald-300 text-[11px]"
-                              title="Open direct WhatsApp conversation"
+                              target="_blank" rel="noopener noreferrer"
+                              className="inline-flex items-center space-x-1 text-emerald-400 hover:text-emerald-300"
                             >
                               <MessageCircle size={12} />
                               <span>{app.phone}</span>
                             </a>
-                          ) : (
-                            <span className="text-[#555]">N/A</span>
-                          )}
+                          ) : <span className="text-[#444]">—</span>}
+                        </td>
+                        <td className="py-3.5 px-4 text-[#777] truncate max-w-[160px]">
+                          {app.email || <span className="text-[#444]">—</span>}
                         </td>
                         <td className="py-3.5 px-4">
                           {app.rating ? (
@@ -712,14 +706,11 @@ export default function CouncilPortal() {
                               <Star size={11} className="fill-yellow-400 mr-1" />
                               <span>{app.rating}/5</span>
                             </div>
-                          ) : (
-                            <span className="text-[#444]">—</span>
-                          )}
+                          ) : <span className="text-[#444]">—</span>}
                         </td>
                         <td className="py-3.5 px-4">
                           <span className={`inline-flex items-center space-x-1 px-2 py-0.5 border text-[9px] font-bold ${badge.color}`}>
-                            {badge.icon}
-                            <span>{badge.label}</span>
+                            {badge.icon}<span>{badge.label}</span>
                           </span>
                         </td>
                         <td className="py-3.5 px-4 text-right text-[#666] group-hover:text-white transition-colors">
@@ -733,6 +724,191 @@ export default function CouncilPortal() {
             </div>
           )}
         </div>
+
+        </>)}
+
+        {/* ── COMPETITION TRACKER SECTION ──────────────────────── */}
+        {portalSection === 'competitions' && (
+          <div className="space-y-6">
+
+            {/* Competition sub-tabs */}
+            <div className="flex items-center space-x-1 border border-[#222] bg-[#0a0a0a] p-1 font-mono text-xs w-fit">
+              <button
+                onClick={() => { playMechanicalClick(); setCompTab('history'); }}
+                className={`px-4 py-2 uppercase tracking-widest text-[10px] font-bold transition-all ${compTab === 'history' ? 'bg-[#B3141B] text-white' : 'text-[#777] hover:text-white'}`}
+              >
+                Competition History
+              </button>
+              <button
+                onClick={() => { playMechanicalClick(); setCompTab('upcoming'); }}
+                className={`px-4 py-2 uppercase tracking-widest text-[10px] font-bold transition-all ${compTab === 'upcoming' ? 'bg-emerald-700 text-white' : 'text-[#777] hover:text-white'}`}
+              >
+                Live &amp; Upcoming
+              </button>
+            </div>
+
+            {/* ── HISTORY TAB ── */}
+            {compTab === 'history' && (
+              <div className="space-y-4">
+                <div className="font-mono text-[10px] text-[#555] uppercase tracking-wider pb-2 border-b border-[#1c1c1c]">
+                  CLICKS DCAC · COMPETITION RECORD — {COMPETITION_HISTORY.length} EVENTS ON FILE
+                </div>
+                <div className="font-mono text-[10px] text-[#444] italic mb-2">
+                  Student names marked [PLACEHOLDER] — update in <span className="text-[#777]">src/data/competitions-data.ts</span> when confirmed.
+                </div>
+                <div className="grid gap-4">
+                  {COMPETITION_HISTORY.map((comp) => {
+                    const resultColors: Record<string, string> = {
+                      '1st': 'bg-yellow-500/10 text-yellow-400 border-yellow-500/40',
+                      '2nd': 'bg-blue-500/10 text-blue-400 border-blue-400/40',
+                      '3rd': 'bg-orange-500/10 text-orange-400 border-orange-400/40',
+                      'Won': 'bg-emerald-500/10 text-emerald-400 border-emerald-400/40',
+                      'Finalist': 'bg-purple-500/10 text-purple-400 border-purple-400/40',
+                      'Participated': 'bg-[#222] text-[#888] border-[#333]',
+                    };
+                    return (
+                      <div key={comp.id} className="bg-[#0e0e0e] border border-[#222] p-5 flex flex-col sm:flex-row sm:items-start gap-4">
+                        <div className="shrink-0 flex flex-col items-center justify-center w-20 h-20 border border-[#2a2a2a] bg-[#121212]">
+                          <span className={`text-xs font-bold uppercase px-2 py-0.5 border ${resultColors[comp.result] || 'text-[#888]'}`}>
+                            {comp.resultLabel}
+                          </span>
+                          <span className="text-[9px] text-[#555] mt-1 uppercase font-mono">{comp.year}</span>
+                        </div>
+                        <div className="flex-1 space-y-1.5">
+                          <div>
+                            <h3 className="font-mono font-bold text-white text-sm">{comp.competition}</h3>
+                            <p className="font-mono text-[10px] text-[#B3141B] uppercase tracking-wider">{comp.institution}</p>
+                          </div>
+                          <p className="font-mono text-[11px] text-[#888]">{comp.notes}</p>
+                          <div className="flex items-center space-x-2 pt-1">
+                            <span className="text-[9px] text-[#555] uppercase">Students:</span>
+                            <div className="flex flex-wrap gap-1">
+                              {comp.students.map((s, i) => (
+                                <span key={i} className={`text-[10px] px-2 py-0.5 border font-mono ${s.startsWith('[PLACEHOLDER') ? 'text-[#555] border-[#2a2a2a] italic' : 'text-emerald-400 border-emerald-500/30'}`}>
+                                  {s}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                          <span className={`inline-block text-[9px] uppercase px-2 py-0.5 border font-mono mt-1 ${
+                            comp.category === 'national' ? 'text-yellow-400 border-yellow-500/30'
+                            : comp.category === 'intra-college' ? 'text-[#B3141B] border-[#B3141B]/30'
+                            : 'text-blue-400 border-blue-400/30'
+                          }`}>
+                            {comp.category}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Add new record notice */}
+                <div className="border border-dashed border-[#2a2a2a] p-4 text-center font-mono text-[10px] text-[#555]">
+                  To add a new competition result, edit <span className="text-[#888]">src/data/competitions-data.ts</span> → <span className="text-[#888]">COMPETITION_HISTORY</span> array.
+                </div>
+              </div>
+            )}
+
+            {/* ── UPCOMING TAB ── */}
+            {compTab === 'upcoming' && (
+              <div className="space-y-4">
+                <div className="font-mono text-[10px] text-[#555] uppercase tracking-wider pb-2 border-b border-[#1c1c1c]">
+                  LIVE &amp; UPCOMING PHOTOGRAPHY COMPETITIONS — {UPCOMING_COMPETITIONS.length} CURATED PICKS
+                </div>
+
+                {/* Status legend */}
+                <div className="flex items-center space-x-4 font-mono text-[9px]">
+                  <span className="flex items-center space-x-1"><span className="w-2 h-2 bg-emerald-500 rounded-full" /><span className="text-[#777]">OPEN</span></span>
+                  <span className="flex items-center space-x-1"><span className="w-2 h-2 bg-yellow-500 rounded-full" /><span className="text-[#777]">CLOSING SOON</span></span>
+                  <span className="flex items-center space-x-1"><span className="w-2 h-2 bg-blue-400 rounded-full" /><span className="text-[#777]">ANNOUNCED</span></span>
+                </div>
+
+                <div className="grid gap-4">
+                  {UPCOMING_COMPETITIONS.map((comp) => {
+                    const statusDot: Record<string, string> = {
+                      'open': 'bg-emerald-500',
+                      'closing-soon': 'bg-yellow-500',
+                      'announced': 'bg-blue-400',
+                      'ongoing': 'bg-[#B3141B]',
+                    };
+                    const statusLabel: Record<string, string> = {
+                      'open': 'OPEN FOR ENTRIES',
+                      'closing-soon': 'CLOSING SOON',
+                      'announced': 'ANNOUNCED',
+                      'ongoing': 'ONGOING',
+                    };
+                    return (
+                      <div key={comp.id} className="bg-[#0e0e0e] border border-[#222] p-5 space-y-3">
+                        <div className="flex justify-between items-start gap-3">
+                          <div>
+                            <div className="flex items-center space-x-2 mb-1">
+                              <span className={`w-2 h-2 rounded-full shrink-0 ${statusDot[comp.status]}`} />
+                              <span className="font-mono text-[9px] text-[#555] uppercase">{statusLabel[comp.status]}</span>
+                            </div>
+                            <h3 className="font-mono font-bold text-white text-sm">{comp.name}</h3>
+                            <p className="font-mono text-[10px] text-[#B3141B] uppercase tracking-wider mt-0.5">{comp.organizer}</p>
+                          </div>
+                          {comp.link && (
+                            <a
+                              href={comp.link}
+                              target="_blank" rel="noopener noreferrer"
+                              className="shrink-0 px-3 py-1.5 bg-[#121212] border border-[#2a2a2a] hover:border-[#B3141B] text-[10px] font-mono text-[#888] hover:text-white transition-colors flex items-center space-x-1"
+                            >
+                              <ExternalLink size={11} />
+                              <span>VISIT</span>
+                            </a>
+                          )}
+                        </div>
+
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 font-mono text-[10px]">
+                          {comp.theme && (
+                            <div>
+                              <span className="text-[#555] block uppercase text-[9px]">Theme</span>
+                              <span className="text-[#ccc] italic">{comp.theme}</span>
+                            </div>
+                          )}
+                          <div>
+                            <span className="text-[#555] block uppercase text-[9px]">Deadline</span>
+                            <span className="text-yellow-400 font-bold">{comp.deadline}</span>
+                          </div>
+                          {comp.prizePool && (
+                            <div>
+                              <span className="text-[#555] block uppercase text-[9px]">Prize</span>
+                              <span className="text-emerald-400">{comp.prizePool}</span>
+                            </div>
+                          )}
+                          <div>
+                            <span className="text-[#555] block uppercase text-[9px]">Format</span>
+                            <span className="text-[#aaa] capitalize">{comp.submissionFormat}</span>
+                          </div>
+                          <div className="sm:col-span-2">
+                            <span className="text-[#555] block uppercase text-[9px]">Eligibility</span>
+                            <span className="text-[#aaa]">{comp.eligibility}</span>
+                          </div>
+                        </div>
+
+                        <div className="flex flex-wrap gap-1 pt-1">
+                          {comp.tags.map((tag) => (
+                            <span key={tag} className="text-[9px] px-2 py-0.5 bg-[#141414] border border-[#2a2a2a] text-[#888] font-mono uppercase">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="border border-dashed border-[#2a2a2a] p-4 text-center font-mono text-[10px] text-[#555]">
+                  To add or update competition listings, edit <span className="text-[#888]">src/data/competitions-data.ts</span> → <span className="text-[#888]">UPCOMING_COMPETITIONS</span> array.
+                </div>
+              </div>
+            )}
+
+          </div>
+        )}
+
       </main>
 
       {/* =====================================================================
@@ -816,22 +992,18 @@ export default function CouncilPortal() {
               </div>
             </div>
 
-            {/* Camera Gear & Statement */}
+            {/* Statement only if it's a real web applicant statement */}
             <div className="space-y-3 font-mono text-xs">
-              <div className="p-3 bg-[#121212] border border-[#222]">
-                <span className="text-[9px] text-[#555] uppercase block mb-1">Equipment Kit</span>
-                <p className="text-white font-bold">{selectedApplicant.cameraGear}</p>
-                <span className="text-[10px] text-[#777]">{selectedApplicant.gearCategory} • Genre: {selectedApplicant.primaryGenre}</span>
-              </div>
-
-              <div className="p-4 bg-[#121212] border border-[#222]">
-                <span className="text-[9px] text-[#555] uppercase block mb-1">
-                  Candidate Statement (&ldquo;What Noticing Means to You&rdquo;)
-                </span>
-                <p className="font-editorial text-base text-[#ccc] italic leading-relaxed">
-                  &ldquo;{selectedApplicant.statement}&rdquo;
-                </p>
-              </div>
+              {selectedApplicant.statement && selectedApplicant.statement.length > 40 && !['President','Vice','General','Treasurer','Core','Social','Member'].some(k => selectedApplicant.statement.startsWith(k)) && (
+                <div className="p-4 bg-[#121212] border border-[#222]">
+                  <span className="text-[9px] text-[#555] uppercase block mb-1">
+                    Candidate Statement
+                  </span>
+                  <p className="font-editorial text-base text-[#ccc] italic leading-relaxed">
+                    &ldquo;{selectedApplicant.statement}&rdquo;
+                  </p>
+                </div>
+              )}
             </div>
 
             {/* Evaluation & Status Controls */}

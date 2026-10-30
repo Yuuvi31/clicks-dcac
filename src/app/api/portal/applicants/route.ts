@@ -27,23 +27,26 @@ export async function GET(request: Request) {
     const search = searchParams.get('search')?.toLowerCase() || '';
     const status = searchParams.get('status') || 'ALL';
     const gear = searchParams.get('gear') || 'ALL';
-    const genre = searchParams.get('genre') || 'ALL';
-    const rosterType = searchParams.get('roster') || 'ALL'; // ALL, MEMBERS, RECRUITS, 1st, 2nd, 3rd
+    const rosterType = searchParams.get('roster') || 'ALL'; // ALL, COUNCIL, MEMBERS, RECRUITS, 1st, 2nd, 3rd
 
     const all = await getAllApplicants();
+
+    // IDs of known council members (CLK-MEM-001 to CLK-MEM-006)
+    const councilIds = new Set(['clk-001','clk-002','clk-003','clk-004','clk-005','clk-006']);
 
     // Compute live dashboard metrics
     const stats = {
       total: all.length,
-      activeMembers: all.filter((a) => a.applicationNo.startsWith('CLK-MEM-')).length,
+      council: all.filter((a) => councilIds.has(a.id)).length,
+      activeMembers: all.filter((a) => a.applicationNo.startsWith('CLK-MEM-') && !councilIds.has(a.id)).length,
       newRecruits: all.filter((a) => !a.applicationNo.startsWith('CLK-MEM-')).length,
       pending: all.filter((a) => a.status === 'PENDING').length,
       shortlisted: all.filter((a) => a.status === 'SHORTLISTED').length,
       selected: all.filter((a) => a.status === 'SELECTED').length,
       rejected: all.filter((a) => a.status === 'REJECTED').length,
-      year1: all.filter((a) => a.courseYear.includes('1st') || a.courseYear.includes('1')).length,
-      year2: all.filter((a) => a.courseYear.includes('2nd') || a.courseYear.includes('2')).length,
-      year3: all.filter((a) => a.courseYear.includes('3rd') || a.courseYear.includes('3')).length,
+      year1: all.filter((a) => a.courseYear.includes('1st')).length,
+      year2: all.filter((a) => a.courseYear.includes('2nd')).length,
+      year3: all.filter((a) => a.courseYear.includes('3rd')).length,
       male: all.filter((a) => a.gender === 'Male').length,
       female: all.filter((a) => a.gender === 'Female').length,
       otherGender: all.filter((a) => a.gender !== 'Male' && a.gender !== 'Female').length,
@@ -56,15 +59,15 @@ export async function GET(request: Request) {
     // Filter applicants
     const filtered = all.filter((applicant) => {
       // Roster type filter
-      if (rosterType === 'MEMBERS' && !applicant.applicationNo.startsWith('CLK-MEM-')) return false;
+      if (rosterType === 'COUNCIL') return councilIds.has(applicant.id);
+      if (rosterType === 'MEMBERS' && (!applicant.applicationNo.startsWith('CLK-MEM-') || councilIds.has(applicant.id))) return false;
       if (rosterType === 'RECRUITS' && applicant.applicationNo.startsWith('CLK-MEM-')) return false;
-      if (rosterType === '1st' && !(applicant.courseYear.includes('1st') || applicant.courseYear.includes('1 '))) return false;
-      if (rosterType === '2nd' && !(applicant.courseYear.includes('2nd') || applicant.courseYear.includes('2 '))) return false;
-      if (rosterType === '3rd' && !(applicant.courseYear.includes('3rd') || applicant.courseYear.includes('3 '))) return false;
+      if (rosterType === '1st' && !applicant.courseYear.includes('1st')) return false;
+      if (rosterType === '2nd' && !applicant.courseYear.includes('2nd')) return false;
+      if (rosterType === '3rd' && !applicant.courseYear.includes('3rd')) return false;
 
       if (status !== 'ALL' && applicant.status !== status) return false;
       if (gear !== 'ALL' && applicant.gearCategory !== gear) return false;
-      if (genre !== 'ALL' && applicant.primaryGenre.toLowerCase() !== genre.toLowerCase()) return false;
       if (search) {
         const matchesName = applicant.fullName.toLowerCase().includes(search);
         const matchesEmail = applicant.email.toLowerCase().includes(search);

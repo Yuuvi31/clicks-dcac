@@ -31,6 +31,7 @@ export interface Applicant {
   reviewedBy?: string;
   createdAt: string;
   updatedAt: string;
+  councilRole?: string; // set only for core team members
 }
 
 export interface CouncilUser {
