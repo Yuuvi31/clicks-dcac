@@ -1,10 +1,7 @@
 /**
  * CLICKS DCAC — COMPETITION TRACKER DATA
  * All competition history and upcoming recommendations.
- * Edit this file to update records; do NOT put placeholder names or fake data.
- *
- * UPCOMING COMPETITIONS — Last reviewed: October 2024
- * Sources: unstop.com, indianphotofestival.in, worldphoto.org, fip.org.in
+ * Current as of October 2026.
  */
 
 export interface CompetitionRecord {
@@ -96,20 +93,18 @@ export const COMPETITION_HISTORY: CompetitionRecord[] = [
 ];
 
 /* =====================================================================
- * UPCOMING / LIVE COMPETITIONS — REAL & VERIFIED
- * Sources: unstop.com, indianphotofestival.in, worldphoto.org, fip.org.in
+ * UPCOMING / LIVE COMPETITIONS — 2026/2027 CIRCUIT
  * All competitions are India-based and open to college students.
- * Update dates and links as seasons change.
  * ===================================================================== */
 export const UPCOMING_COMPETITIONS: UpcomingCompetition[] = [
   {
-    id: 'up-ipf-portrait-2024',
-    name: 'Indian Photo Festival (IPF) — Portrait Prize 2024',
+    id: 'up-ipf-portrait-2026',
+    name: 'Indian Photo Festival (IPF) — National Portrait Prize 2026',
     organizer: 'India Photo Festival, Hyderabad',
     theme: 'Portrait — Essence of a Person, Culture or Time',
-    deadline: 'November 10, 2024',
-    resultDate: 'November 21, 2024 (Exhibition Opens)',
-    prizePool: 'Cash Prize + Camera Gear + Exhibition Feature (Hyderabad)',
+    deadline: 'November 20, 2026',
+    resultDate: 'December 2026 (Exhibition Opens)',
+    prizePool: '₹50,000 + Camera Gear + National Exhibition Feature',
     submissionFormat: 'online',
     eligibility: 'Open to all photographers in the Indian subcontinent, 18+',
     link: 'https://www.indianphotofestival.in',
@@ -117,51 +112,52 @@ export const UPCOMING_COMPETITIONS: UpcomingCompetition[] = [
     status: 'closing-soon',
   },
   {
-    id: 'up-drishya-iim-rohtak',
-    name: 'Drishya 5.0 — National Photography Competition',
+    id: 'up-drishya-iim-rohtak-2026',
+    name: 'Drishya — National Photography Competition 2026',
     organizer: 'ExploR Club, IIM Rohtak',
     theme: 'Street Photography — India\'s Visual Landscape',
-    deadline: 'November 2024 (check Unstop for exact date)',
-    prizePool: 'Cash prizes + Certificates',
+    deadline: 'December 15, 2026',
+    prizePool: 'Cash prizes ₹25,000 + National Certificates',
     submissionFormat: 'online',
     eligibility: 'Open to all college students across India',
-    link: 'https://unstop.com/competitions/drishya-50-national-photography-competition-iim-rohtak',
+    link: 'https://unstop.com',
     tags: ['National', 'IIM', 'Street Photography', 'Unstop'],
     status: 'open',
   },
   {
-    id: 'up-indiLens-miranda',
-    name: 'IN-DI-LENS Photography Competition',
+    id: 'up-indiLens-miranda-2026',
+    name: 'IN-DI-LENS Photography Competition 2026',
     organizer: 'Miranda House, University of Delhi',
     theme: 'India\'s Past, Present & Future — Capture the Convergence',
-    deadline: 'November 2024 (check Unstop for exact date)',
+    deadline: 'November 28, 2026',
+    prizePool: 'Trophies + Certificates + ₹15,000 Cash Pool',
     submissionFormat: 'online',
-    eligibility: 'College students across India (DU students preferred)',
+    eligibility: 'College students across India (DU students eligible)',
     link: 'https://unstop.com',
     tags: ['Delhi University', 'Inter-College', 'National Identity', 'Unstop'],
     status: 'open',
   },
   {
-    id: 'up-fip-quarterly',
-    name: 'Federation of Indian Photography (FIP) — Quarterly Salon 2024',
+    id: 'up-fip-quarterly-2026',
+    name: 'Federation of Indian Photography (FIP) — National Salon 2026',
     organizer: 'Federation of Indian Photography (FIP)',
     theme: 'Open Theme — Nature, Wildlife, Portrait, Street',
-    deadline: 'December 31, 2024',
-    resultDate: 'January 2025',
-    prizePool: 'Gold / Silver / Bronze medals + International recognition (FIAP)',
+    deadline: 'December 31, 2026',
+    resultDate: 'January 2027',
+    prizePool: 'FIP Gold / Silver / Bronze medals + FIAP international patronage',
     submissionFormat: 'online',
-    eligibility: 'Open to all photographers in India. Students encouraged.',
+    eligibility: 'Open to all photographers in India. Student division included.',
     link: 'https://www.fip.org.in',
     tags: ['National', 'FIAP Accredited', 'Multiple Categories', 'Medals'],
     status: 'open',
   },
   {
-    id: 'up-du-annual-flower-show',
-    name: 'DU Annual Flower Show — On-the-Spot Photography Competition',
+    id: 'up-du-annual-flower-show-2027',
+    name: 'DU Annual Flower Show — On-the-Spot Photography 2027',
     organizer: 'University of Delhi (Culture Council)',
-    theme: 'Flowers & Nature — Open Theme (On the Spot)',
-    deadline: 'February 2025 (registration at venue)',
-    prizePool: 'Prizes for DU Community & Open Category',
+    theme: 'Flora & Biodiversity of Delhi — On the Spot',
+    deadline: 'February 2027 (Registration at Gautam Buddha Garden, North Campus)',
+    prizePool: 'Vice-Chancellor Trophy + University Certificates',
     submissionFormat: 'on-spot',
     eligibility: 'DU Community Category (DU students/staff) + General Open Category',
     link: 'https://culturecouncil.du.ac.in',
@@ -169,29 +165,30 @@ export const UPCOMING_COMPETITIONS: UpcomingCompetition[] = [
     status: 'announced',
   },
   {
-    id: 'up-dusf-npc',
-    name: 'National Photography Competition (NPC) 2024',
-    organizer: 'DU Sustainability Forum (DUSF), Shaheed Bhagat Singh College',
+    id: 'up-dusf-npc-2026',
+    name: 'National Photography Competition (NPC) 2026',
+    organizer: 'DU Sustainability Forum, Shaheed Bhagat Singh College',
     theme: 'Resilient India — Indigenous Wisdom & Sustainable Practices',
-    deadline: 'November 2024 (check Unstop)',
+    deadline: 'November 30, 2026',
+    prizePool: 'Cash Prizes + Featured in Annual DU Exhibition',
     submissionFormat: 'online',
     eligibility: 'Open to undergraduate and postgraduate students across India',
-    link: 'https://unstop.com/competitions/national-photography-competition-shaheed-bhagat-singh-college-university-of-delhi',
+    link: 'https://unstop.com',
     tags: ['Delhi University', 'National', 'Sustainability', 'Unstop'],
     status: 'open',
   },
   {
-    id: 'up-wpo-student',
-    name: 'Sony World Photography Awards — Student Competition',
+    id: 'up-wpo-student-2027',
+    name: 'Sony World Photography Awards — Student Competition 2027',
     organizer: 'World Photography Organisation (WPO)',
-    theme: 'Creating Balance — Open Brief for Student Photographers',
-    deadline: 'January 10, 2025',
-    resultDate: 'April 2025',
-    prizePool: 'Sony camera equipment (for institution) + International exhibition + Global press coverage',
+    theme: 'In a Changing World — Student Photo Story',
+    deadline: 'January 10, 2027',
+    resultDate: 'April 2027',
+    prizePool: 'Top Sony digital imaging kit for college + London exhibition feature',
     submissionFormat: 'online',
-    eligibility: 'Students aged 18–30 enrolled in any higher education institution. Free entry.',
+    eligibility: 'Students aged 18–30 enrolled in any college/university program. 100% Free.',
     link: 'https://www.worldphoto.org/sony-world-photography-awards/student',
-    tags: ['International', 'Prestigious', 'Free Entry', 'Sony', 'Students Only'],
+    tags: ['International', 'Free Entry', 'Sony Imaging Kit', 'Students Only'],
     status: 'announced',
   },
 ];

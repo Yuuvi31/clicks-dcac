@@ -19,10 +19,24 @@ import {
   FileSpreadsheet,
   AlertTriangle,
   Sparkles,
+  RefreshCw,
+  Globe,
 } from 'lucide-react';
 import { Applicant, CouncilRole, ApplicationStatus, ROLE_PERMISSIONS } from '@/types/backend';
 import { playMechanicalClick, playShutterSnap } from '@/lib/sound';
 import { COMPETITION_HISTORY, UPCOMING_COMPETITIONS } from '@/data/competitions-data';
+
+interface LiveCompetitionItem {
+  id: string;
+  title: string;
+  link: string;
+  source: string;
+  snippet: string;
+  date?: string | null;
+  deadline?: string;
+  prize?: string;
+  category: 'delhi-university' | 'national' | 'unstop' | 'international';
+}
 
 interface CurrentUser {
   userId: string;
@@ -73,6 +87,12 @@ export default function CouncilPortal() {
 
   // Competition tab: 'history' | 'upcoming'
   const [compTab, setCompTab] = useState<'history' | 'upcoming'>('history');
+
+  // Live SerpApi Competitions state
+  const [liveCompetitions, setLiveCompetitions] = useState<LiveCompetitionItem[]>([]);
+  const [loadingLive, setLoadingLive] = useState(false);
+  const [liveLastUpdated, setLiveLastUpdated] = useState<string | null>(null);
+  const [liveFilter, setLiveFilter] = useState<'all' | 'delhi-university' | 'unstop' | 'national'>('all');
 
   // Filter & Search — COUNCIL tab added
   const [searchQuery, setSearchQuery] = useState('');
@@ -128,6 +148,23 @@ export default function CouncilPortal() {
     }
   }, [currentUser, searchQuery, rosterTab, statusFilter]);
 
+  // Fetch live photography competitions via SerpApi
+  const fetchLiveCompetitions = useCallback(async (forceRefresh = false) => {
+    try {
+      setLoadingLive(true);
+      const res = await fetch(`/api/portal/competitions/live${forceRefresh ? '?refresh=true' : ''}`);
+      const data = await res.json();
+      if (res.ok && data.competitions) {
+        setLiveCompetitions(data.competitions);
+        if (data.lastUpdated) setLiveLastUpdated(data.lastUpdated);
+      }
+    } catch (err) {
+      console.error('Failed to fetch live competitions:', err);
+    } finally {
+      setLoadingLive(false);
+    }
+  }, []);
+
   useEffect(() => {
     checkSession();
   }, [checkSession]);
@@ -137,6 +174,12 @@ export default function CouncilPortal() {
       fetchApplicants();
     }
   }, [currentUser, fetchApplicants]);
+
+  useEffect(() => {
+    if (portalSection === 'competitions' && liveCompetitions.length === 0) {
+      fetchLiveCompetitions();
+    }
+  }, [portalSection, liveCompetitions.length, fetchLiveCompetitions]);
 
   // Handle Login
   const handleLogin = async (e: React.FormEvent) => {
@@ -781,99 +824,224 @@ export default function CouncilPortal() {
               </div>
             )}
 
-            {/* ── UPCOMING TAB ── */}
+            {/* ── UPCOMING & LIVE RADAR TAB ── */}
             {compTab === 'upcoming' && (
-              <div className="space-y-4">
-                <div className="font-mono text-[10px] text-[#555] uppercase tracking-wider pb-2 border-b border-[#1c1c1c]">
-                  LIVE &amp; UPCOMING PHOTOGRAPHY COMPETITIONS — {UPCOMING_COMPETITIONS.length} CURATED PICKS
-                </div>
-
-                {/* Status legend */}
-                <div className="flex items-center space-x-4 font-mono text-[9px]">
-                  <span className="flex items-center space-x-1"><span className="w-2 h-2 bg-emerald-500 rounded-full" /><span className="text-[#777]">OPEN</span></span>
-                  <span className="flex items-center space-x-1"><span className="w-2 h-2 bg-yellow-500 rounded-full" /><span className="text-[#777]">CLOSING SOON</span></span>
-                  <span className="flex items-center space-x-1"><span className="w-2 h-2 bg-blue-400 rounded-full" /><span className="text-[#777]">ANNOUNCED</span></span>
-                </div>
-
-                <div className="grid gap-4">
-                  {UPCOMING_COMPETITIONS.map((comp) => {
-                    const statusDot: Record<string, string> = {
-                      'open': 'bg-emerald-500',
-                      'closing-soon': 'bg-yellow-500',
-                      'announced': 'bg-blue-400',
-                      'ongoing': 'bg-[#B3141B]',
-                    };
-                    const statusLabel: Record<string, string> = {
-                      'open': 'OPEN FOR ENTRIES',
-                      'closing-soon': 'CLOSING SOON',
-                      'announced': 'ANNOUNCED',
-                      'ongoing': 'ONGOING',
-                    };
-                    return (
-                      <div key={comp.id} className="bg-[#0e0e0e] border border-[#222] p-5 space-y-3">
-                        <div className="flex justify-between items-start gap-3">
-                          <div>
-                            <div className="flex items-center space-x-2 mb-1">
-                              <span className={`w-2 h-2 rounded-full shrink-0 ${statusDot[comp.status]}`} />
-                              <span className="font-mono text-[9px] text-[#555] uppercase">{statusLabel[comp.status]}</span>
-                            </div>
-                            <h3 className="font-mono font-bold text-white text-sm">{comp.name}</h3>
-                            <p className="font-mono text-[10px] text-[#B3141B] uppercase tracking-wider mt-0.5">{comp.organizer}</p>
-                          </div>
-                          {comp.link && (
-                            <a
-                              href={comp.link}
-                              target="_blank" rel="noopener noreferrer"
-                              className="shrink-0 px-3 py-1.5 bg-[#121212] border border-[#2a2a2a] hover:border-[#B3141B] text-[10px] font-mono text-[#888] hover:text-white transition-colors flex items-center space-x-1"
-                            >
-                              <ExternalLink size={11} />
-                              <span>VISIT</span>
-                            </a>
-                          )}
-                        </div>
-
-                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 font-mono text-[10px]">
-                          {comp.theme && (
-                            <div>
-                              <span className="text-[#555] block uppercase text-[9px]">Theme</span>
-                              <span className="text-[#ccc] italic">{comp.theme}</span>
-                            </div>
-                          )}
-                          <div>
-                            <span className="text-[#555] block uppercase text-[9px]">Deadline</span>
-                            <span className="text-yellow-400 font-bold">{comp.deadline}</span>
-                          </div>
-                          {comp.prizePool && (
-                            <div>
-                              <span className="text-[#555] block uppercase text-[9px]">Prize</span>
-                              <span className="text-emerald-400">{comp.prizePool}</span>
-                            </div>
-                          )}
-                          <div>
-                            <span className="text-[#555] block uppercase text-[9px]">Format</span>
-                            <span className="text-[#aaa] capitalize">{comp.submissionFormat}</span>
-                          </div>
-                          <div className="sm:col-span-2">
-                            <span className="text-[#555] block uppercase text-[9px]">Eligibility</span>
-                            <span className="text-[#aaa]">{comp.eligibility}</span>
-                          </div>
-                        </div>
-
-                        <div className="flex flex-wrap gap-1 pt-1">
-                          {comp.tags.map((tag) => (
-                            <span key={tag} className="text-[9px] px-2 py-0.5 bg-[#141414] border border-[#2a2a2a] text-[#888] font-mono uppercase">
-                              {tag}
-                            </span>
-                          ))}
-                        </div>
+              <div className="space-y-6">
+                {/* SerpApi Live Radar Header Card */}
+                <div className="bg-[#0e0e0e] border border-[#2a2a2a] p-4 sm:p-5 relative overflow-hidden">
+                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 border-b border-[#1f1f1f] pb-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <span className="w-2.5 h-2.5 bg-emerald-500 rounded-full animate-ping" />
+                        <span className="font-mono text-xs uppercase tracking-widest text-emerald-400 font-bold">
+                          LIVE PHOTOGRAPHY RADAR // REAL-TIME TOURNAMENTS
+                        </span>
                       </div>
-                    );
-                  })}
+                      <p className="font-mono text-[10px] text-[#777]">
+                        Live search engine feed powered by SerpApi (Google Search &amp; Unstop). Pulls active 2026 photography competitions across Delhi University and India.
+                      </p>
+                      {liveLastUpdated && (
+                        <div className="font-mono text-[9px] text-[#555]">
+                          Last synced: {new Date(liveLastUpdated).toLocaleTimeString()}
+                        </div>
+                      )}
+                    </div>
+
+                    <button
+                      type="button"
+                      disabled={loadingLive}
+                      onClick={() => {
+                        playMechanicalClick();
+                        fetchLiveCompetitions(true);
+                      }}
+                      className="flex items-center space-x-2 px-3.5 py-2 bg-[#161616] border border-[#333] hover:border-emerald-500 text-white font-mono text-[11px] font-bold uppercase tracking-wider transition-all disabled:opacity-50 shrink-0"
+                    >
+                      <RefreshCw size={13} className={loadingLive ? 'animate-spin text-emerald-400' : 'text-emerald-400'} />
+                      <span>{loadingLive ? 'SCANNING WEB...' : 'SYNC LIVE RADAR'}</span>
+                    </button>
+                  </div>
+
+                  {/* Filter chips for live events */}
+                  <div className="flex items-center space-x-2 pt-3 font-mono text-[10px] overflow-x-auto">
+                    <span className="text-[#555] uppercase shrink-0">FILTER RADAR:</span>
+                    {(['all', 'delhi-university', 'unstop', 'national'] as const).map((cat) => (
+                      <button
+                        key={cat}
+                        onClick={() => { playMechanicalClick(); setLiveFilter(cat); }}
+                        className={`px-2.5 py-1 uppercase tracking-wider transition-colors shrink-0 border ${
+                          liveFilter === cat
+                            ? 'bg-emerald-600/20 text-emerald-400 border-emerald-500 font-bold'
+                            : 'bg-[#121212] text-[#777] border-[#222] hover:border-[#444]'
+                        }`}
+                      >
+                        {cat === 'all' ? `ALL LIVE (${liveCompetitions.length})` : cat.replace('-', ' ')}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
-                <div className="border border-dashed border-[#2a2a2a] p-4 text-center font-mono text-[10px] text-[#555]">
-                  To add or update competition listings, edit <span className="text-[#888]">src/data/competitions-data.ts</span> → <span className="text-[#888]">UPCOMING_COMPETITIONS</span> array.
+                {/* Loading State */}
+                {loadingLive && liveCompetitions.length === 0 && (
+                  <div className="p-12 text-center bg-[#0c0c0c] border border-[#1f1f1f] space-y-3 font-mono text-xs">
+                    <RefreshCw size={24} className="mx-auto text-emerald-400 animate-spin" />
+                    <div className="text-white font-bold tracking-widest uppercase">
+                      SCANNING SERPAPI &amp; GOOGLE SEARCH FOR 2026/2027 COMPETITIONS...
+                    </div>
+                    <div className="text-[#666] text-[10px]">
+                      Searching Unstop, Delhi University cultural portals &amp; national fest circuits...
+                    </div>
+                  </div>
+                )}
+
+                {/* Live Competitions Stream */}
+                {liveCompetitions.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="font-mono text-[10px] text-emerald-400 uppercase tracking-wider flex items-center space-x-2">
+                      <Globe size={12} />
+                      <span>LIVE DISCOVERIES VIA SEARCH RADAR ({liveCompetitions.filter(c => liveFilter === 'all' || c.category === liveFilter).length} ACTIVE RESULTS)</span>
+                    </div>
+
+                    <div className="grid gap-3">
+                      {liveCompetitions
+                        .filter((c) => liveFilter === 'all' || c.category === liveFilter)
+                        .map((comp) => {
+                          const catBadgeColor: Record<string, string> = {
+                            'delhi-university': 'bg-[#B3141B]/15 text-[#ff8085] border-[#B3141B]/40',
+                            'unstop': 'bg-blue-500/10 text-blue-400 border-blue-500/30',
+                            'national': 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30',
+                            'international': 'bg-purple-500/10 text-purple-400 border-purple-500/30',
+                          };
+                          return (
+                            <div key={comp.id} className="bg-[#0b0b0b] border border-[#222] hover:border-[#333] p-4 space-y-2 transition-colors">
+                              <div className="flex justify-between items-start gap-3">
+                                <div className="space-y-1">
+                                  <div className="flex flex-wrap items-center gap-2">
+                                    <span className={`text-[9px] uppercase font-mono px-2 py-0.5 border font-bold ${catBadgeColor[comp.category] || 'text-[#888]'}`}>
+                                      {comp.category.replace('-', ' ')}
+                                    </span>
+                                    {comp.deadline && (
+                                      <span className="text-[9px] font-mono text-yellow-400 bg-yellow-500/10 px-2 py-0.5 border border-yellow-500/30">
+                                        ⏱ {comp.deadline}
+                                      </span>
+                                    )}
+                                    {comp.prize && (
+                                      <span className="text-[9px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 border border-emerald-500/30">
+                                        🏆 {comp.prize}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <h3 className="font-mono font-bold text-white text-sm hover:text-emerald-400 transition-colors">
+                                    {comp.title}
+                                  </h3>
+                                </div>
+
+                                {comp.link && (
+                                  <a
+                                    href={comp.link}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="shrink-0 px-3 py-1.5 bg-[#141414] border border-[#333] hover:border-emerald-500 text-[10px] font-mono text-emerald-400 hover:text-white transition-colors flex items-center space-x-1"
+                                  >
+                                    <span>REGISTER / VISIT</span>
+                                    <ExternalLink size={11} />
+                                  </a>
+                                )}
+                              </div>
+
+                              <p className="font-mono text-[11px] text-[#888] leading-relaxed">
+                                {comp.snippet}
+                              </p>
+
+                              <div className="flex justify-between items-center pt-1 font-mono text-[9px] text-[#555]">
+                                <span>Source: {comp.source}</span>
+                                {comp.date && <span>Indexed: {comp.date}</span>}
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+                )}
+
+                {/* ── CURATED MAJOR 2026/2027 CIRCUITS ── */}
+                <div className="pt-4 border-t border-[#1c1c1c] space-y-4">
+                  <div className="font-mono text-[10px] text-[#666] uppercase tracking-wider pb-1 border-b border-[#181818] flex justify-between items-center">
+                    <span>FLAGSHIP COLLEGE CIRCUITS // 2026–2027 CALENDAR</span>
+                    <span>{UPCOMING_COMPETITIONS.length} VERIFIED ENTRIES</span>
+                  </div>
+
+                  <div className="grid gap-3">
+                    {UPCOMING_COMPETITIONS.map((comp) => {
+                      const statusDot: Record<string, string> = {
+                        'open': 'bg-emerald-500',
+                        'closing-soon': 'bg-yellow-500',
+                        'announced': 'bg-blue-400',
+                        'ongoing': 'bg-[#B3141B]',
+                      };
+                      return (
+                        <div key={comp.id} className="bg-[#0e0e0e] border border-[#222] p-4 space-y-2.5">
+                          <div className="flex justify-between items-start gap-3">
+                            <div>
+                              <div className="flex items-center space-x-2 mb-1">
+                                <span className={`w-2 h-2 rounded-full shrink-0 ${statusDot[comp.status]}`} />
+                                <span className="font-mono text-[9px] text-[#555] uppercase">{comp.status.replace('-', ' ')}</span>
+                              </div>
+                              <h3 className="font-mono font-bold text-white text-sm">{comp.name}</h3>
+                              <p className="font-mono text-[10px] text-[#B3141B] uppercase tracking-wider mt-0.5">{comp.organizer}</p>
+                            </div>
+                            {comp.link && (
+                              <a
+                                href={comp.link}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="shrink-0 px-3 py-1.5 bg-[#121212] border border-[#2a2a2a] hover:border-[#B3141B] text-[10px] font-mono text-[#888] hover:text-white transition-colors flex items-center space-x-1"
+                              >
+                                <ExternalLink size={11} />
+                                <span>VISIT</span>
+                              </a>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 font-mono text-[10px]">
+                            {comp.theme && (
+                              <div>
+                                <span className="text-[#555] block uppercase text-[9px]">Theme</span>
+                                <span className="text-[#ccc] italic">{comp.theme}</span>
+                              </div>
+                            )}
+                            <div>
+                              <span className="text-[#555] block uppercase text-[9px]">Deadline</span>
+                              <span className="text-yellow-400 font-bold">{comp.deadline}</span>
+                            </div>
+                            {comp.prizePool && (
+                              <div>
+                                <span className="text-[#555] block uppercase text-[9px]">Prize</span>
+                                <span className="text-emerald-400">{comp.prizePool}</span>
+                              </div>
+                            )}
+                            <div>
+                              <span className="text-[#555] block uppercase text-[9px]">Format</span>
+                              <span className="text-[#aaa] capitalize">{comp.submissionFormat}</span>
+                            </div>
+                            <div className="sm:col-span-2">
+                              <span className="text-[#555] block uppercase text-[9px]">Eligibility</span>
+                              <span className="text-[#aaa]">{comp.eligibility}</span>
+                            </div>
+                          </div>
+
+                          <div className="flex flex-wrap gap-1 pt-1">
+                            {comp.tags.map((tag) => (
+                              <span key={tag} className="text-[9px] px-2 py-0.5 bg-[#141414] border border-[#2a2a2a] text-[#888] font-mono uppercase">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
+
               </div>
             )}
 
