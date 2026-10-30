@@ -3,21 +3,26 @@ import { getCouncilUserByEmail } from '@/lib/db';
 import { verifyPassword, createSessionToken, COOKIE_NAME } from '@/lib/auth';
 import { ROLE_PERMISSIONS } from '@/types/backend';
 
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: Request) {
   try {
-    const { email, password } = await request.json();
+    // Accept 'username' OR 'email' field (frontend sends as 'email' key)
+    const body = await request.json();
+    const username = (body.email || body.username || '').trim().toLowerCase();
+    const password = body.password;
 
-    if (!email || !password) {
+    if (!username || !password) {
       return NextResponse.json(
-        { error: 'Email and password are required.' },
+        { error: 'Username and password are required.' },
         { status: 400 }
       );
     }
 
-    const user = await getCouncilUserByEmail(email);
+    const user = await getCouncilUserByEmail(username);
     if (!user) {
       return NextResponse.json(
-        { error: 'Invalid council credentials. Check email address.' },
+        { error: 'Invalid credentials. Check your username.' },
         { status: 401 }
       );
     }
@@ -25,7 +30,7 @@ export async function POST(request: Request) {
     const isValid = await verifyPassword(password, user.passwordHash);
     if (!isValid) {
       return NextResponse.json(
-        { error: 'Invalid password. Check authentication key.' },
+        { error: 'Invalid password. Contact President to reset.' },
         { status: 401 }
       );
     }

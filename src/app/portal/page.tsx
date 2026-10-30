@@ -166,12 +166,7 @@ export default function CouncilPortal() {
     }
   };
 
-  // Quick fill demo credentials
-  const fillCredentials = (email: string, pw: string) => {
-    playMechanicalClick();
-    setLoginEmail(email);
-    setLoginPassword(pw);
-  };
+  // (autofill removed — each council member uses their own private credentials)
 
   // Handle Logout
   const handleLogout = async () => {
@@ -343,12 +338,12 @@ export default function CouncilPortal() {
           <form onSubmit={handleLogin} className="space-y-6">
             <div className="space-y-1">
               <label className="block font-mono text-[10px] uppercase text-[#777] tracking-wider">
-                Council Official Email
+                Council Username
               </label>
               <input
-                type="email"
+                type="text"
                 required
-                placeholder="role@clicks-dcac.com"
+                placeholder="Enter your council username"
                 value={loginEmail}
                 onChange={(e) => setLoginEmail(e.target.value)}
                 className="w-full bg-[#121212] border border-[#282828] focus:border-[#B3141B] text-white px-3 py-2.5 font-mono text-xs focus:outline-none transition-colors"
@@ -379,55 +374,31 @@ export default function CouncilPortal() {
             </button>
           </form>
 
-          {/* Council Official Logins */}
-          <div className="mt-8 pt-6 border-t border-[#1c1c1c] space-y-3">
-            <div className="flex justify-between items-center font-mono text-[9px] text-[#666]">
-              <span className="uppercase tracking-widest">COUNCIL EXECUTIVE LOGINS:</span>
-              <span>1-CLICK AUTOFILL</span>
+          {/* Credentials Guide */}
+          <div className="mt-8 pt-6 border-t border-[#1c1c1c]">
+            <div className="font-mono text-[9px] text-[#555] uppercase tracking-widest mb-3">
+              ACCESS CREDENTIALS
             </div>
-            <div className="grid grid-cols-2 gap-2 font-mono text-[10px]">
-              <button
-                type="button"
-                onClick={() => fillCredentials('artika.24bcp840@dcac.du.ac.in', 'clicks2026!president')}
-                className="p-2.5 bg-[#121212] border border-[#242424] hover:border-[#B3141B] text-left transition-colors"
-              >
-                <div className="text-white font-bold truncate">Artika Jain</div>
-                <div className="text-[8px] text-[#B3141B] uppercase font-mono">President (Full Control)</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => fillCredentials('vp@clicks-dcac.com', 'clicks2026!vp')}
-                className="p-2.5 bg-[#121212] border border-[#242424] hover:border-[#B3141B] text-left transition-colors"
-              >
-                <div className="text-white font-bold truncate">Asin V. Jose</div>
-                <div className="text-[8px] text-[#888] uppercase font-mono">Vice-President</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => fillCredentials('zidan.25bcp943@dcac.du.ac.in', 'clicks2026!gensec')}
-                className="p-2.5 bg-[#121212] border border-[#242424] hover:border-[#B3141B] text-left transition-colors"
-              >
-                <div className="text-white font-bold truncate">Zidan Ahmad</div>
-                <div className="text-[8px] text-[#888] uppercase font-mono">General Secretary</div>
-              </button>
-              <button
-                type="button"
-                onClick={() => fillCredentials('laqshya.25bcp716@dcac.du.ac.in', 'clicks2026!core')}
-                className="p-2.5 bg-[#121212] border border-[#242424] hover:border-[#B3141B] text-left transition-colors"
-              >
-                <div className="text-white font-bold truncate">Laqshya</div>
-                <div className="text-[8px] text-[#555] uppercase font-mono">Treasurer / Core</div>
-              </button>
+            <div className="space-y-1.5 font-mono text-[10px] text-[#666]">
+              <div className="flex justify-between items-center py-1.5 border-b border-[#181818]">
+                <span>President</span>
+                <span className="text-[#444] tracking-wider">username: <span className="text-[#666]">prez</span></span>
+              </div>
+              <div className="flex justify-between items-center py-1.5 border-b border-[#181818]">
+                <span>Vice President</span>
+                <span className="text-[#444] tracking-wider">username: <span className="text-[#666]">viceprez</span></span>
+              </div>
+              <div className="flex justify-between items-center py-1.5 border-b border-[#181818]">
+                <span>General Secretary</span>
+                <span className="text-[#444] tracking-wider">username: <span className="text-[#666]">gensec</span></span>
+              </div>
+              <div className="flex justify-between items-center py-1.5">
+                <span>Core / Treasurer</span>
+                <span className="text-[#444] tracking-wider">username: <span className="text-[#666]">core</span></span>
+              </div>
             </div>
-            <div className="pt-2 flex justify-between items-center text-[9px] font-mono text-[#555]">
-              <span>Need superadmin?</span>
-              <button
-                type="button"
-                onClick={() => fillCredentials('president@clicks-dcac.com', 'clicks2026!president')}
-                className="text-[#888] hover:text-white underline"
-              >
-                president@clicks-dcac.com
-              </button>
+            <div className="mt-3 font-mono text-[8px] text-[#444] italic">
+              Each member&apos;s password is their own private key. Contact President to reset.
             </div>
           </div>
         </div>

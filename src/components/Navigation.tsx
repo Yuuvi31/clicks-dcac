@@ -128,14 +128,14 @@ export const Navigation: React.FC<NavigationProps> = ({ onShutterTrigger }) => {
 
           {/* Right Action Tools: Shutter Flash, Sound Toggle & Mobile Hamburger */}
           <div className="flex items-center space-x-3">
-            {/* Council Portal Button */}
+            {/* Council Portal Login Button — prominent for core team */}
             <a
               href="/portal"
-              className="flex items-center space-x-1.5 px-2.5 py-1.5 border border-[#2a2a2a] hover:border-[#B3141B] text-[#999] hover:text-white text-[10px] font-mono transition-colors"
-              title="Council Member Dispatch Terminal"
+              className="flex items-center space-x-1.5 px-3 py-1.5 bg-[#B3141B] hover:bg-[#c91820] text-white text-[10px] font-mono font-bold tracking-widest transition-all shadow-md uppercase"
+              title="Council Member Login — CLICKS Portal"
             >
-              <ShieldCheck size={12} className="text-[#B3141B]" />
-              <span className="hidden sm:inline tracking-wider">PORTAL</span>
+              <ShieldCheck size={12} />
+              <span className="hidden sm:inline">COUNCIL LOGIN</span>
             </a>
 
             {/* Quick Shutter Button (Easter Egg) */}
@@ -207,14 +207,24 @@ export const Navigation: React.FC<NavigationProps> = ({ onShutterTrigger }) => {
               <p className="text-white font-bold">{SITE_META.collegeName}</p>
               <p className="text-[#555]">{SITE_META.coordinates}</p>
             </div>
-            <a
-              href={SITE_META.instagramUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-[#B3141B] underline tracking-widest"
-            >
-              INSTAGRAM ↗
-            </a>
+            <div className="flex flex-col items-end gap-2">
+              <a
+                href="/portal"
+                className="flex items-center space-x-1.5 px-3 py-1.5 bg-[#B3141B] text-white text-[10px] font-mono font-bold tracking-widest uppercase"
+                onClick={() => { playMechanicalClick(); setIsMenuOpen(false); }}
+              >
+                <ShieldCheck size={11} />
+                <span>COUNCIL LOGIN</span>
+              </a>
+              <a
+                href={SITE_META.instagramUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#B3141B] underline tracking-widest"
+              >
+                INSTAGRAM ↗
+              </a>
+            </div>
           </div>
         </div>
       )}

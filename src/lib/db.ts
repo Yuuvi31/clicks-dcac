@@ -14,62 +14,35 @@ const supabase = isSupabaseConfigured
   : null;
 
 // Initial Seed Council Users (DCAC Council Executives)
+// Credentials: username = prez | viceprez | gensec | core  (password = same as username)
 export const INITIAL_COUNCIL_USERS: CouncilUser[] = [
   {
     id: 'user-pres-01',
-    email: 'president@clicks-dcac.com',
-    name: 'Artika Jain (President)',
+    email: 'prez',
+    name: 'Artika Jain',
     role: 'PRESIDENT',
-    passwordHash: 'eaff0ea73fb25efeedb371aa34ecf368e98e3e49b253528d778fcf29c4f11e0d', // clicks2026!president
-  },
-  {
-    id: 'user-pres-02',
-    email: 'artika.24bcp840@dcac.du.ac.in',
-    name: 'Artika Jain (President)',
-    role: 'PRESIDENT',
-    passwordHash: 'eaff0ea73fb25efeedb371aa34ecf368e98e3e49b253528d778fcf29c4f11e0d', // clicks2026!president
+    passwordHash: 'd44107d93a6796d761373e03d693fd9fa5607d7da73d62c1907cd74b4dbff609', // prez
   },
   {
     id: 'user-vp-01',
-    email: 'vp@clicks-dcac.com',
-    name: 'Asin V. Jose (Vice President)',
+    email: 'viceprez',
+    name: 'Asin V. Jose',
     role: 'VICE_PRESIDENT',
-    passwordHash: 'd1640d3944d5c539d48652200c5faa2bd80ae59f3a58b46ed8b73d3a81251c44', // clicks2026!vp
+    passwordHash: '9946d68ea54426cbe97d24818fb4dc81ba4af75c825425b9a158828e83b211d0', // viceprez
   },
   {
     id: 'user-gs-01',
-    email: 'gensec@clicks-dcac.com',
-    name: 'Zidan Ahmad (General Secretary)',
+    email: 'gensec',
+    name: 'Zidan Ahmad',
     role: 'GENERAL_SECRETARY',
-    passwordHash: '7dcd870bb6ae1b0d61af7825aab4d1df21da573a97381ad4086dc5d44b4c4557', // clicks2026!gensec
-  },
-  {
-    id: 'user-gs-02',
-    email: 'zidan.25bcp943@dcac.du.ac.in',
-    name: 'Zidan Ahmad (General Secretary)',
-    role: 'GENERAL_SECRETARY',
-    passwordHash: '7dcd870bb6ae1b0d61af7825aab4d1df21da573a97381ad4086dc5d44b4c4557', // clicks2026!gensec
+    passwordHash: 'c02152d4fa7fe052e30f4f4923facb577e8b671facc938af43c684585f2d4da6', // gensec
   },
   {
     id: 'user-core-01',
-    email: 'core@clicks-dcac.com',
-    name: 'Pratya Harsh (Core Executive)',
+    email: 'core',
+    name: 'Core Member',
     role: 'CORE_EXECUTIVE',
-    passwordHash: '70fdc3c3815abc589e7ce37b990de48567db2d49eb8fc848d2271459549937d9', // clicks2026!core
-  },
-  {
-    id: 'user-treasurer-01',
-    email: 'laqshya.25bcp716@dcac.du.ac.in',
-    name: 'Laqshya (Treasurer)',
-    role: 'CORE_EXECUTIVE',
-    passwordHash: '70fdc3c3815abc589e7ce37b990de48567db2d49eb8fc848d2271459549937d9', // clicks2026!core
-  },
-  {
-    id: 'user-sm-01',
-    email: 'satyam.journalism@dcac.du.ac.in',
-    name: 'Satyam Bhagat (Social Media Head)',
-    role: 'CORE_EXECUTIVE',
-    passwordHash: '70fdc3c3815abc589e7ce37b990de48567db2d49eb8fc848d2271459549937d9', // clicks2026!core
+    passwordHash: '4c7d6dc64004ccab08df1c43ef417477e1019f74054cf8a60757b5d058e8a03c', // core
   },
 ];
 
