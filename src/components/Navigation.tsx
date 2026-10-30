@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
-import { Volume2, VolumeX, Menu, X, Camera } from 'lucide-react';
+import { Volume2, VolumeX, Menu, X, Camera, ShieldCheck } from 'lucide-react';
 import { toggleSound, isSoundMuted, playMechanicalClick, playShutterSnap } from '@/lib/sound';
 import { SITE_META } from '@/data/clicks-data';
 
@@ -50,6 +50,7 @@ export const Navigation: React.FC<NavigationProps> = ({ onShutterTrigger }) => {
     { label: 'COUNCIL', href: '#council', number: '05' },
     { label: 'ARCHIVE', href: '#archive', number: '06' },
     { label: 'JOIN', href: '#join', number: '07' },
+    { label: 'PORTAL', href: '/portal', number: '08' },
   ];
 
   return (
@@ -127,6 +128,16 @@ export const Navigation: React.FC<NavigationProps> = ({ onShutterTrigger }) => {
 
           {/* Right Action Tools: Shutter Flash, Sound Toggle & Mobile Hamburger */}
           <div className="flex items-center space-x-3">
+            {/* Council Portal Button */}
+            <a
+              href="/portal"
+              className="flex items-center space-x-1.5 px-2.5 py-1.5 border border-[#2a2a2a] hover:border-[#B3141B] text-[#999] hover:text-white text-[10px] font-mono transition-colors"
+              title="Council Member Dispatch Terminal"
+            >
+              <ShieldCheck size={12} className="text-[#B3141B]" />
+              <span className="hidden sm:inline tracking-wider">PORTAL</span>
+            </a>
+
             {/* Quick Shutter Button (Easter Egg) */}
             <button
               onClick={() => {

@@ -1,36 +1,84 @@
 'use client';
 
 import React, { useState } from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { CheckCircle2, Camera } from 'lucide-react';
+import { CheckCircle2, Camera, AlertCircle, ShieldCheck } from 'lucide-react';
 import { SITE_META } from '@/data/clicks-data';
 import { playShutterSnap, playMechanicalClick } from '@/lib/sound';
+import { Gender, GearCategory } from '@/types/backend';
 
 export const JoinClicks: React.FC = () => {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     phone: '',
+    gender: 'Male' as Gender,
     department: '',
+    rollNo: '',
     cameraGear: '',
+    gearCategory: 'Smartphone (Manual/Pro)' as GearCategory,
     genre: 'street',
     portfolioUrl: '',
     statement: '',
   });
-  const [submitted, setSubmitted] = useState(false);
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [submitted, setSubmitted] = useState(false);
+  const [assignedAppNo, setAssignedAppNo] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     playMechanicalClick();
     setIsSubmitting(true);
+    setErrorMessage(null);
 
-    setTimeout(() => {
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          fullName: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          gender: formData.gender,
+          courseYear: formData.department,
+          rollNo: formData.rollNo,
+          cameraGear: formData.cameraGear,
+          gearCategory: formData.gearCategory,
+          primaryGenre: formData.genre,
+          portfolioUrl: formData.portfolioUrl,
+          statement: formData.statement,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to submit application dossier.');
+      }
+
       playShutterSnap();
-      setIsSubmitting(false);
+      setAssignedAppNo(data.application?.applicationNo || 'CLK-2026-REGISTERED');
       setSubmitted(true);
-    }, 450);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Error submitting registration.';
+      setErrorMessage(message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  const gearCategories: GearCategory[] = [
+    'DSLR / Mirrorless',
+    '35mm Analog Film',
+    'Smartphone (Manual/Pro)',
+    'Point & Shoot',
+    'No Gear (Eager to Learn)',
+  ];
+
+  const genderOptions: Gender[] = ['Male', 'Female', 'Non-Binary', 'Prefer not to say'];
 
   return (
     <section id="join" className="relative w-full bg-[#080808] text-[#f4f1ea] py-32 border-b border-[#1c1c1c]">
@@ -41,7 +89,7 @@ export const JoinClicks: React.FC = () => {
             <div className="space-y-2">
               <div className="flex items-center space-x-2 font-mono text-[10px] tracking-[0.3em] text-[#B3141B] uppercase">
                 <Camera size={13} />
-                <span>ANNUAL RECRUITMENT CALL</span>
+                <span>ANNUAL RECRUITMENT CALL // SESSION 2026-27</span>
               </div>
               <h2 className="font-display text-6xl sm:text-8xl text-white uppercase tracking-tight leading-none">
                 36 Frames
@@ -64,8 +112,15 @@ export const JoinClicks: React.FC = () => {
               <div>STATUS: <span className="text-[#f70012] font-bold">RECRUITMENT ACTIVE</span></div>
               <div>COLLEGE: <span className="text-white">Delhi College of Arts &amp; Commerce</span></div>
               <div>DEADLINE: <span className="text-[#ccc]">{SITE_META.applicationDeadline}</span></div>
-              <div className="pt-2 text-[10px] text-[#555]">
-                DIRECT FORM: <a href={SITE_META.joinFormUrl} className="text-[#B3141B] underline">GOOGLE FORM DESTINATION ↗</a>
+              <div className="pt-3 border-t border-[#1c1c1c] flex items-center justify-between">
+                <span className="text-[10px] text-[#555]">COUNCIL AUTHORIZED:</span>
+                <Link
+                  href="/portal"
+                  className="flex items-center space-x-1.5 text-[10px] tracking-wider text-[#B3141B] hover:text-white transition-colors"
+                >
+                  <ShieldCheck size={13} />
+                  <span>COUNCIL PORTAL LOGIN ↗</span>
+                </Link>
               </div>
             </div>
           </div>
@@ -82,6 +137,9 @@ export const JoinClicks: React.FC = () => {
                   <CheckCircle2 size={32} />
                 </div>
                 <div>
+                  <div className="inline-block px-3 py-1 bg-[#141414] border border-[#333] font-mono text-xs text-[#B3141B] mb-3">
+                    REGISTRATION ID: {assignedAppNo}
+                  </div>
                   <h3 className="font-display text-4xl text-white uppercase tracking-tight">
                     Frame Recorded // Shutter Confirmed
                   </h3>
@@ -89,11 +147,26 @@ export const JoinClicks: React.FC = () => {
                     Your portfolio application has been logged into the CLICKS DCAC archive.
                   </p>
                 </div>
-                <div className="font-mono text-xs text-[#777] max-w-md mx-auto">
-                  Our council will review your submission and reach out via WhatsApp/Email for the portfolio walk.
+                <div className="font-mono text-xs text-[#777] max-w-md mx-auto leading-relaxed">
+                  The executive council has received your registration. Review status will be processed through the internal council portal, and shortlisted photographers will be notified on WhatsApp for the portfolio walk.
                 </div>
                 <button
-                  onClick={() => setSubmitted(false)}
+                  onClick={() => {
+                    setSubmitted(false);
+                    setFormData({
+                      name: '',
+                      email: '',
+                      phone: '',
+                      gender: 'Male',
+                      department: '',
+                      rollNo: '',
+                      cameraGear: '',
+                      gearCategory: 'Smartphone (Manual/Pro)',
+                      genre: 'street',
+                      portfolioUrl: '',
+                      statement: '',
+                    });
+                  }}
                   className="px-6 py-2.5 bg-[#141414] border border-[#333] hover:border-[#B3141B] font-mono text-xs text-white uppercase tracking-widest transition-colors"
                 >
                   SUBMIT ANOTHER FRAME
@@ -103,10 +176,17 @@ export const JoinClicks: React.FC = () => {
               <form onSubmit={handleSubmit} className="space-y-8">
                 <div className="border-b border-[#222] pb-4 flex justify-between items-baseline font-mono text-xs">
                   <span className="text-[#B3141B] tracking-widest uppercase font-bold">
-                    CANDIDATE DOSSIER
+                    CANDIDATE DOSSIER // RECRUITMENT 2026
                   </span>
-                  <span className="text-[#666]">SESSION 2026-27</span>
+                  <span className="text-[#666]">DELHI UNIVERSITY</span>
                 </div>
+
+                {errorMessage && (
+                  <div className="p-3 bg-[#B3141B]/15 border border-[#B3141B] text-[#ff8085] font-mono text-xs flex items-center space-x-2">
+                    <AlertCircle size={15} />
+                    <span>{errorMessage}</span>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                   {/* Name field */}
@@ -154,6 +234,24 @@ export const JoinClicks: React.FC = () => {
                     />
                   </div>
 
+                  {/* Gender field */}
+                  <div className="relative group">
+                    <label className="block font-mono text-[10px] text-[#777] uppercase tracking-wider mb-1">
+                      Gender *
+                    </label>
+                    <select
+                      value={formData.gender}
+                      onChange={(e) => setFormData({ ...formData, gender: e.target.value as Gender })}
+                      className="w-full bg-[#0c0c0c] border-b border-[#2e2e2e] focus:border-[#B3141B] text-white py-2 font-mono text-sm focus:outline-none transition-colors"
+                    >
+                      {genderOptions.map((opt) => (
+                        <option key={opt} value={opt} className="bg-[#141414] text-white">
+                          {opt}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
                   {/* College Department / Year */}
                   <div className="relative group">
                     <label className="block font-mono text-[10px] text-[#777] uppercase tracking-wider mb-1">
@@ -168,12 +266,66 @@ export const JoinClicks: React.FC = () => {
                       className="w-full bg-transparent border-b border-[#2e2e2e] focus:border-[#B3141B] text-white py-2 font-mono text-sm focus:outline-none transition-colors placeholder-[#444]"
                     />
                   </div>
+
+                  {/* College Roll No */}
+                  <div className="relative group">
+                    <label className="block font-mono text-[10px] text-[#777] uppercase tracking-wider mb-1">
+                      College Roll Number (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="e.g. 24/JOU/042"
+                      value={formData.rollNo}
+                      onChange={(e) => setFormData({ ...formData, rollNo: e.target.value })}
+                      className="w-full bg-transparent border-b border-[#2e2e2e] focus:border-[#B3141B] text-white py-2 font-mono text-sm focus:outline-none transition-colors placeholder-[#444]"
+                    />
+                  </div>
+                </div>
+
+                {/* Equipment Category Selection */}
+                <div>
+                  <label className="block font-mono text-[10px] text-[#777] uppercase tracking-wider mb-2">
+                    Primary Equipment Class *
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {gearCategories.map((cat) => (
+                      <button
+                        type="button"
+                        key={cat}
+                        onClick={() => {
+                          playMechanicalClick();
+                          setFormData({ ...formData, gearCategory: cat });
+                        }}
+                        className={`py-2 px-3 font-mono text-[11px] border text-left transition-all ${
+                          formData.gearCategory === cat
+                            ? 'bg-[#B3141B] text-white border-[#B3141B] font-bold'
+                            : 'bg-[#121212] text-[#888] border-[#242424] hover:border-[#444]'
+                        }`}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Specific Camera Gear / Model */}
+                <div className="relative group">
+                  <label className="block font-mono text-[10px] text-[#777] uppercase tracking-wider mb-1">
+                    Specific Gear Model / Lens (or Phone Model)
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Sony α7 III • 28mm f/2 or iPhone 14 Pro"
+                    value={formData.cameraGear}
+                    onChange={(e) => setFormData({ ...formData, cameraGear: e.target.value })}
+                    className="w-full bg-transparent border-b border-[#2e2e2e] focus:border-[#B3141B] text-white py-2 font-mono text-sm focus:outline-none transition-colors placeholder-[#444]"
+                  />
                 </div>
 
                 {/* Genre Selector */}
                 <div>
                   <label className="block font-mono text-[10px] text-[#777] uppercase tracking-wider mb-2">
-                    Primary Photographic Genre
+                    Primary Photographic Focus
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {['street', 'portrait', 'documentary', 'experimental'].map((g) => (
@@ -196,29 +348,14 @@ export const JoinClicks: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Camera Gear / Kit */}
-                <div className="relative group">
-                  <label className="block font-mono text-[10px] text-[#777] uppercase tracking-wider mb-1">
-                    Camera Equipment / Smartphone Model
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Fujifilm X-T30 or iPhone 15 Pro or Canon 200D"
-                    value={formData.cameraGear}
-                    onChange={(e) => setFormData({ ...formData, cameraGear: e.target.value })}
-                    className="w-full bg-transparent border-b border-[#2e2e2e] focus:border-[#B3141B] text-white py-2 font-mono text-sm focus:outline-none transition-colors placeholder-[#444]"
-                  />
-                </div>
-
                 {/* Portfolio URL / Drive link */}
                 <div className="relative group">
                   <label className="block font-mono text-[10px] text-[#777] uppercase tracking-wider mb-1">
-                    Instagram Handle or Portfolio Drive Link *
+                    Instagram Handle or Google Drive Link
                   </label>
                   <input
                     type="text"
-                    required
-                    placeholder="@handle or Google Drive folder link"
+                    placeholder="@handle or Google Drive folder URL"
                     value={formData.portfolioUrl}
                     onChange={(e) => setFormData({ ...formData, portfolioUrl: e.target.value })}
                     className="w-full bg-transparent border-b border-[#2e2e2e] focus:border-[#B3141B] text-white py-2 font-mono text-sm focus:outline-none transition-colors placeholder-[#444]"
@@ -244,7 +381,7 @@ export const JoinClicks: React.FC = () => {
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="w-full py-4 bg-[#B3141B] hover:bg-[#c91820] text-white font-mono text-xs tracking-[0.25em] uppercase font-bold transition-all flex items-center justify-center space-x-3 shadow-xl"
+                  className="w-full py-4 bg-[#B3141B] hover:bg-[#c91820] text-white font-mono text-xs tracking-[0.25em] uppercase font-bold transition-all flex items-center justify-center space-x-3 shadow-xl disabled:opacity-50"
                 >
                   <Camera size={16} />
                   <span>{isSubmitting ? 'EXPOSING FRAME...' : 'FIRE SHUTTER // SUBMIT APPLICATION'}</span>

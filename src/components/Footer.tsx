@@ -90,6 +90,7 @@ export const Footer: React.FC = () => {
               <li><a href="#council" className="hover:text-white transition-colors">05 Council</a></li>
               <li><a href="#archive" className="hover:text-white transition-colors">06 Full Archive</a></li>
               <li><a href="#join" className="hover:text-white transition-colors">07 Join CLICKS</a></li>
+              <li><a href="/portal" className="text-[#ff8085] hover:text-white transition-colors">08 Council Portal ↗</a></li>
             </ul>
           </div>
 
