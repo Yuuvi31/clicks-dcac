@@ -31,7 +31,27 @@ export async function GET(request: Request) {
       );
     }
 
-    const applicants = await getAllApplicants();
+    const { searchParams } = new URL(request.url);
+    const rosterType = searchParams.get('roster') || 'ALL';
+    const status = searchParams.get('status') || 'ALL';
+
+    let applicants = await getAllApplicants();
+
+    if (rosterType === 'MEMBERS') {
+      applicants = applicants.filter((a) => a.applicationNo.startsWith('CLK-MEM-'));
+    } else if (rosterType === 'RECRUITS') {
+      applicants = applicants.filter((a) => !a.applicationNo.startsWith('CLK-MEM-'));
+    } else if (rosterType === '1st') {
+      applicants = applicants.filter((a) => a.courseYear.includes('1st') || a.courseYear.includes('1 '));
+    } else if (rosterType === '2nd') {
+      applicants = applicants.filter((a) => a.courseYear.includes('2nd') || a.courseYear.includes('2 '));
+    } else if (rosterType === '3rd') {
+      applicants = applicants.filter((a) => a.courseYear.includes('3rd') || a.courseYear.includes('3 '));
+    }
+
+    if (status !== 'ALL') {
+      applicants = applicants.filter((a) => a.status === status);
+    }
 
     // Transform applicants to formatted Excel rows
     const rows = applicants.map((a, index) => {
@@ -45,9 +65,12 @@ export async function GET(request: Request) {
         minute: '2-digit',
       });
 
+      const isMember = a.applicationNo.startsWith('CLK-MEM-');
+
       return {
         'S.No': index + 1,
-        'Application No': a.applicationNo,
+        'Record Category': isMember ? 'Active Society Member' : 'New Web Applicant',
+        'Application / Member ID': a.applicationNo,
         'Registered On (IST)': formattedDate,
         'Current Status': a.status,
         'Full Name': a.fullName,

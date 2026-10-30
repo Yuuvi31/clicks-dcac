@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { createClient } from '@supabase/supabase-js';
 import { Applicant, CouncilUser, ApplicationStatus } from '@/types/backend';
+import { getRosterAsApplicants } from '@/data/society-members';
 
 // Detect Supabase credentials
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -12,19 +13,26 @@ const supabase = isSupabaseConfigured
   ? createClient(supabaseUrl!, supabaseKey!)
   : null;
 
-// Initial Seed Council Users (Extracted from real society council)
+// Initial Seed Council Users (DCAC Council Executives)
 export const INITIAL_COUNCIL_USERS: CouncilUser[] = [
   {
     id: 'user-pres-01',
     email: 'president@clicks-dcac.com',
-    name: 'Artika Mimi Jain (President)',
+    name: 'Artika Jain (President)',
+    role: 'PRESIDENT',
+    passwordHash: 'eaff0ea73fb25efeedb371aa34ecf368e98e3e49b253528d778fcf29c4f11e0d', // clicks2026!president
+  },
+  {
+    id: 'user-pres-02',
+    email: 'artika.24bcp840@dcac.du.ac.in',
+    name: 'Artika Jain (President)',
     role: 'PRESIDENT',
     passwordHash: 'eaff0ea73fb25efeedb371aa34ecf368e98e3e49b253528d778fcf29c4f11e0d', // clicks2026!president
   },
   {
     id: 'user-vp-01',
     email: 'vp@clicks-dcac.com',
-    name: 'Jose Asin V. (Vice President)',
+    name: 'Asin V. Jose (Vice President)',
     role: 'VICE_PRESIDENT',
     passwordHash: 'd1640d3944d5c539d48652200c5faa2bd80ae59f3a58b46ed8b73d3a81251c44', // clicks2026!vp
   },
@@ -36,9 +44,30 @@ export const INITIAL_COUNCIL_USERS: CouncilUser[] = [
     passwordHash: '7dcd870bb6ae1b0d61af7825aab4d1df21da573a97381ad4086dc5d44b4c4557', // clicks2026!gensec
   },
   {
+    id: 'user-gs-02',
+    email: 'zidan.25bcp943@dcac.du.ac.in',
+    name: 'Zidan Ahmad (General Secretary)',
+    role: 'GENERAL_SECRETARY',
+    passwordHash: '7dcd870bb6ae1b0d61af7825aab4d1df21da573a97381ad4086dc5d44b4c4557', // clicks2026!gensec
+  },
+  {
     id: 'user-core-01',
     email: 'core@clicks-dcac.com',
-    name: 'Pratya (Core Executive)',
+    name: 'Pratya Harsh (Core Executive)',
+    role: 'CORE_EXECUTIVE',
+    passwordHash: '70fdc3c3815abc589e7ce37b990de48567db2d49eb8fc848d2271459549937d9', // clicks2026!core
+  },
+  {
+    id: 'user-treasurer-01',
+    email: 'laqshya.25bcp716@dcac.du.ac.in',
+    name: 'Laqshya (Treasurer)',
+    role: 'CORE_EXECUTIVE',
+    passwordHash: '70fdc3c3815abc589e7ce37b990de48567db2d49eb8fc848d2271459549937d9', // clicks2026!core
+  },
+  {
+    id: 'user-sm-01',
+    email: 'satyam.journalism@dcac.du.ac.in',
+    name: 'Satyam Bhagat (Social Media Head)',
     role: 'CORE_EXECUTIVE',
     passwordHash: '70fdc3c3815abc589e7ce37b990de48567db2d49eb8fc848d2271459549937d9', // clicks2026!core
   },
@@ -153,13 +182,19 @@ const INITIAL_APPLICANTS: Applicant[] = [
   },
 ];
 
+// Combined initial roster and applicant records
+const ALL_SEED_APPLICANTS: Applicant[] = [
+  ...getRosterAsApplicants(),
+  ...INITIAL_APPLICANTS,
+];
+
 // Persistent File Storage Path for Local Dev / Non-Supabase environments
 const DATA_DIR = path.resolve(process.cwd(), '.data');
 const DATA_FILE = path.join(DATA_DIR, 'applicants.json');
 const USERS_FILE = path.join(DATA_DIR, 'council_users.json');
 
 // In-Memory fallback cache
-let memoryApplicants: Applicant[] = [...INITIAL_APPLICANTS];
+let memoryApplicants: Applicant[] = [...ALL_SEED_APPLICANTS];
 let memoryUsers: CouncilUser[] = [...INITIAL_COUNCIL_USERS];
 
 function ensureFileStorage() {
@@ -168,20 +203,38 @@ function ensureFileStorage() {
       fs.mkdirSync(DATA_DIR, { recursive: true });
     }
     if (!fs.existsSync(DATA_FILE)) {
-      fs.writeFileSync(DATA_FILE, JSON.stringify(INITIAL_APPLICANTS, null, 2), 'utf-8');
+      memoryApplicants = [...ALL_SEED_APPLICANTS];
+      fs.writeFileSync(DATA_FILE, JSON.stringify(memoryApplicants, null, 2), 'utf-8');
     } else {
       const data = fs.readFileSync(DATA_FILE, 'utf-8');
-      memoryApplicants = JSON.parse(data);
+      const loaded: Applicant[] = JSON.parse(data);
+      // Merge in any missing roster students automatically
+      const existingIds = new Set(loaded.map((a) => a.id));
+      const missing = ALL_SEED_APPLICANTS.filter((a) => !existingIds.has(a.id));
+      memoryApplicants = [...loaded, ...missing];
+      if (missing.length > 0) {
+        fs.writeFileSync(DATA_FILE, JSON.stringify(memoryApplicants, null, 2), 'utf-8');
+      }
     }
+
     if (!fs.existsSync(USERS_FILE)) {
+      memoryUsers = [...INITIAL_COUNCIL_USERS];
       fs.writeFileSync(USERS_FILE, JSON.stringify(INITIAL_COUNCIL_USERS, null, 2), 'utf-8');
     } else {
       const data = fs.readFileSync(USERS_FILE, 'utf-8');
-      memoryUsers = JSON.parse(data);
+      const loadedUsers: CouncilUser[] = JSON.parse(data);
+      const existingEmails = new Set(loadedUsers.map((u) => u.email.toLowerCase()));
+      const missingUsers = INITIAL_COUNCIL_USERS.filter((u) => !existingEmails.has(u.email.toLowerCase()));
+      memoryUsers = [...loadedUsers, ...missingUsers];
+      if (missingUsers.length > 0) {
+        fs.writeFileSync(USERS_FILE, JSON.stringify(memoryUsers, null, 2), 'utf-8');
+      }
     }
   } catch (err) {
     // In serverless read-only contexts, fallback seamlessly to in-memory
     console.warn('File storage note:', err);
+    memoryApplicants = [...ALL_SEED_APPLICANTS];
+    memoryUsers = [...INITIAL_COUNCIL_USERS];
   }
 }
 
